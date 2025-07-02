@@ -1,20 +1,19 @@
+from flask import render_template
 from app import app 
 
-# decorators
-# A decorator modifies the functions that follows it
 @app.route('/')
 @app.route('/index')
 def index():
-    user = {'username':'Rennie'}
-    # The return statement must be followed by something 
-    # on the same line.
-    return'''
-    <html>
-    <head>
-        <title>Home Page - Microblog</title>
-    </head>
-    <body>
-        <h1>Hello, ''' + user['username'] + ''' </h1>
-    </body>
-    </html>
-    '''
+    user={'username':'Rennie'}
+    posts=[
+        {
+            'author':{'username':'John'},
+            'body':'Beautiful day in Asheville!'
+        },
+        {
+            'author':{'username':'Susan'},
+            'body':'Jaws is my favorite movie.'
+        }
+    ]
+    return render_template('index.html', title="Home", user=user, posts=posts)
+    
