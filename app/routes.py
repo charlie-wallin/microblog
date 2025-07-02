@@ -5,5 +5,16 @@ from app import app
 @app.route('/')
 @app.route('/index')
 def index():
-    return "Hello world!"
-
+    user = {'username':'Rennie'}
+    # The return statement must be followed by something 
+    # on the same line.
+    return'''
+    <html>
+    <head>
+        <title>Home Page - Microblog</title>
+    </head>
+    <body>
+        <h1>Hello, ''' + user['username'] + ''' </h1>
+    </body>
+    </html>
+    '''
