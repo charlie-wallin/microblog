@@ -1,44 +1,69 @@
-from flask import render_template, flash, redirect
-from app import app 
-from app.forms import LoginForm
-from flask_login import current_user, login_user
-from flask_login import logout_user
-import sqlalchemy as sa
-from app import db
-from app.models import User
 
+from flask import render_template, flash, redirect, request, url_for  # Flask functions for templates, flash messaging, redirects, and URL generation
+from app import app, db  # Import the Flask app instance and SQLAlchemy database object
+from app.forms import LoginForm  # LoginForm handles user login input and validation
+from app.models import User  # User model represents users in the database
+from flask_login import current_user, login_user, logout_user, login_required  # Flask-Login utilities for managing authentication
+from urllib.parse import urlsplit  # Used to safely parse URLs for security checks
+import sqlalchemy as sa  # SQLAlchemy core syntax for building database queries
+
+
+# Home page route (default landing page)
 @app.route('/')
 @app.route('/index')
+@login_required  # This decorator ensures the route is only accessible to authenticated users
 def index():
-    user={'username':'Rennie'}
-    posts=[
+    user = {'username': 'Rennie'}  # Example/dummy user data passed to template
+    posts = [  # Example/dummy posts to display on the home page
         {
-            'author':{'username':'John'},
-            'body':'Beautiful day in Asheville!'
+            'author': {'username': 'John'},
+            'body': 'Beautiful day in Asheville!'
         },
         {
-            'author':{'username':'Susan'},
-            'body':'A Face in the Crowd is my favorite movie.'
+            'author': {'username': 'Susan'},
+            'body': 'A Face in the Crowd is my favorite movie.'
         }
     ]
+    # Render the 'index.html' template and pass user & posts for display
     return render_template('index.html', title="Home", user=user, posts=posts)
 
+
+# Login page route (handles GET for form display and POST for login processing)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('/index'))
-    form = LoginForm()
-    if form.validate_on_submit():
+    if current_user.is_authenticated:  # If already logged in, skip login page
+        return redirect(url_for('index'))
+
+    form = LoginForm()  # Create an instance of the login form
+
+    if form.validate_on_submit():  # Only runs if form passes validation
+        # Query database for user with matching username
         user = db.session.scalar(
             sa.select(User).where(User.username == form.username.data))
-        if user is None or not user.check.password(form.password.data):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-        login_user(user, remember=form.remember_me.data)
-        return redirect(url_for('index'))
-    return render_template('login.html', title="Sing in", form=form)
 
+        # If no user found or password check fails, show error and reload page
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')  # Temporary error message
+            return redirect(url_for('login'))
+
+        # Log the user in, optionally remembering their session
+        login_user(user, remember=form.remember_me.data)
+
+        # Determine where the user should go next after login
+        next_page = request.args.get('next')
+
+        # Security check: ensure 'next' is a relative path, not a full URL
+        if not next_page or urlsplit(next_page).netloc != '':
+            next_page = url_for('index')
+
+        return redirect(next_page)  # Redirect to the intended page
+
+    # Render the login form page
+    return render_template('login.html', title="Sign in", form=form)
+
+
+# Logout route
 @app.route('/logout')
 def logout():
-    logout_user()
-    return redirect(url_for('index'))
+    logout_user()  # Clear the session for the logged-in user
+    return redirect(url_for('index'))  # Return to home page after logout
