@@ -6,6 +6,8 @@ from app.models import User  # User model represents users in the database
 from flask_login import current_user, login_user, logout_user, login_required  # Flask-Login utilities for managing authentication
 from urllib.parse import urlsplit  # Used to safely parse URLs for security checks
 import sqlalchemy as sa  # SQLAlchemy core syntax for building database queries
+from app import db
+from app.forms import RegistrationForm
 
 
 # Home page route (default landing page)
@@ -64,3 +66,19 @@ def login():
 def logout():
     logout_user()  # Clear the session for the logged-in user
     return redirect(url_for('index'))  # Return to home page after logout
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated():
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('Congratulations, you are registered!')
+        return redirect(url_for('index'))
+    return render_template('register_html', title='Register', form=form)
+
+
