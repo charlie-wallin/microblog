@@ -12,4 +12,10 @@ login = LoginManager(app)
 login.login_view = 'login'
 
 from app import routes, models
+# Added this chunk from AI to make running flask shell easier
 
+@app.shell_context_processor
+def make_shell_context():
+    # Import inside the function to avoid circular imports during app initialization
+    from app.models import User
+    return {'db': db, 'User': User}

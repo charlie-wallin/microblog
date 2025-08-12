@@ -13,8 +13,7 @@ import sqlalchemy as sa  # SQLAlchemy core syntax for building database queries
 @app.route('/index')
 @login_required  # This decorator ensures the route is only accessible to authenticated users
 def index():
-    user = {'username': 'Rennie'}  # Example/dummy user data passed to template
-    posts = [  # Example/dummy posts to display on the home page
+    posts = [
         {
             'author': {'username': 'John'},
             'body': 'Beautiful day in Asheville!'
@@ -24,9 +23,7 @@ def index():
             'body': 'A Face in the Crowd is my favorite movie.'
         }
     ]
-    # Render the 'index.html' template and pass user & posts for display
-    return render_template('index.html', title="Home", user=user, posts=posts)
-
+    return render_template('index.html', title="Home", user=current_user, posts=posts)
 
 # Login page route (handles GET for form display and POST for login processing)
 @app.route('/login', methods=['GET', 'POST'])
